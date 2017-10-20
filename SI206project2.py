@@ -14,6 +14,8 @@ import unittest
 import requests
 import re
 from bs4 import BeautifulSoup
+from urllib.request import urlopen
+import ssl
 
 
 ## Part 1 -- Define your find_urls function here.
@@ -27,8 +29,7 @@ from bs4 import BeautifulSoup
 ## find_urls("the internet is awesome #worldwideweb") should return [], empty list
 
 def find_urls(s):
-
-	pass
+	
 	'''
     use regex: findall that start with "http:// or https:// ("http.://)
     and includes a . 
@@ -37,7 +38,11 @@ def find_urls(s):
     would https://a.co count? would https://www.a.co count?
     extract all that match and return the list of strings
 	'''
-
+	urls = re.findall(('^https*://\S+\.\S\S+'), s)
+	print(urls)
+	print(type(urls))
+	return urls
+	
 
 
 
@@ -48,10 +53,27 @@ def find_urls(s):
 ## http://www.michigandaily.com/section/opinion
 
 def grab_headlines():
-    pass
-    #Your code here
+	'''ctx = ssl.create_default_context()
+	ctx.check_hostname = False
+	ctx.verify_mode = ssl.CERT_NONE
 
+	html = urlopen("http://www.michigandaily.com/section/opinion", context=ctx).read()
+	'''
 
+	#html = urlopen("http://www.michigandaily.com/section/opinion").read()
+	#html = urlopen("opinion.html").read()
+	html = open("opinion.html", "r")
+	soup = BeautifulSoup(html, "html.parser")
+	#grabs html in most read pane
+	mostreadpane = soup.find('div', attrs="view view-most-read view-id-most_read view-display-id-panel_pane_1 view-dom-id-99658157999dd0ac5aa62c2b284dd266")
+	#grabs titles from the list
+	titles = mostreadpane.find_all('a')
+	headlines = []
+	#gets text from anchor tags
+	for title in titles:
+		headlines.append(title.contents[0].rstrip())
+	return headlines
+	
 
 ## PART 3 (a) Define a function called get_umsi_data.  It should create a dictionary
 ## saved in a variable umsi_titles whose keys are UMSI people's names, and whose
