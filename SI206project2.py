@@ -30,15 +30,8 @@ import ssl
 
 def find_urls(s):
 	
-	'''
-    use regex: findall that start with "http:// or https:// ("http.://)
-    and includes a . 
-    . must be followed by 2 or more chars
-    no whitespace chars
-    would https://a.co count? would https://www.a.co count?
-    extract all that match and return the list of strings
-	'''
-	urls = re.findall('(^https*://\S+\.\S\S+)', s)
+	#create list of urls that match the criteria given in the spec and return it
+	urls = re.findall('https*:\/\/\S+\.\S{2,}', s)
 	return urls
 	
 
@@ -51,25 +44,19 @@ def find_urls(s):
 ## http://www.michigandaily.com/section/opinion
 
 def grab_headlines():
-	'''ctx = ssl.create_default_context()
-	ctx.check_hostname = False
-	ctx.verify_mode = ssl.CERT_NONE
+	#code for using opinion.html instead of the live url: html = open("opinion.html", "r")
 
-	html = urlopen("http://www.michigandaily.com/section/opinion", context=ctx).read()
-	'''
-#************************************fix this before submitting************************************************************************************
-	#html = urlopen("http://www.michigandaily.com/section/opinion").read()
-	#html = urlopen("opinion.html").read()
-	html = open("opinion.html", "r")
+	#open url and create beautiful soup object
+	html = urlopen("http://www.michigandaily.com/section/opinion").read()
 	soup = BeautifulSoup(html, "html.parser")
 	#grabs html in most read pane
 	mostreadpane = soup.find('div', attrs="view view-most-read view-id-most_read view-display-id-panel_pane_1 view-dom-id-99658157999dd0ac5aa62c2b284dd266")
-	#grabs titles from the list
+	#grabs links and headlines from the most read pane
 	titles = mostreadpane.find_all('a')
 	headlines = []
-	#gets text from anchor tags
+	#gets text from anchor tags and adds it to the list, removing trailing whitespace
 	for title in titles:
-		headlines.append(title.contents[0].rstrip())
+		headlines.append(title.text.rstrip())
 	return headlines
 	
 
@@ -85,13 +72,6 @@ def grab_headlines():
 ## requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
 
 def get_umsi_data():
-    '''
-    create dict umsi_titles
-    for loop starting with first url, increments and changes the number at the end of the url to lead to the next page
-		create beautiful soup object with each page
-		add 
-		
-    '''
 
     umsi_titles = dict()
     url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
@@ -99,14 +79,15 @@ def get_umsi_data():
     while page < 13:
     	r = requests.get(url, headers={'User-Agent': 'SI_CLASS'})
     	soup = BeautifulSoup(r.text, "html.parser")
-    	#content = soup.find('div', attrs="view-content")
+    	#create lists of the div tags with names and titles from the soup object
     	names = soup.find_all('div', attrs = "field field-name-title field-type-ds field-label-hidden")
     	titles = soup.find_all('div', attrs = 'field field-name-field-person-titles field-type-text field-label-hidden')
     	i = 0
+    	#adds name, title pairs to umsi_titles dict, using a counter to move through titles list
     	for name in names:
     		umsi_titles[name.text] = titles[i].text
     		i += 1
-    	#increment page and update url
+    	#increments page and updates url
     	page = page + 1
     	url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page=" + str(page)
     return umsi_titles
@@ -115,6 +96,7 @@ def get_umsi_data():
 ## INPUT: The dictionary from get_umsi_data().
 ## OUTPUT: Return number of PhD students in the data.  (Don't forget, I may change the input data)
 def num_students(data):
+	
 	count = 0
 	for person in data:
 		if data[person] == 'PhD student':
