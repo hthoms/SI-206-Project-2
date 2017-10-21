@@ -38,9 +38,7 @@ def find_urls(s):
     would https://a.co count? would https://www.a.co count?
     extract all that match and return the list of strings
 	'''
-	urls = re.findall(('^https*://\S+\.\S\S+'), s)
-	print(urls)
-	print(type(urls))
+	urls = re.findall('(^https*://\S+\.\S\S+)', s)
 	return urls
 	
 
@@ -59,7 +57,7 @@ def grab_headlines():
 
 	html = urlopen("http://www.michigandaily.com/section/opinion", context=ctx).read()
 	'''
-
+#************************************fix this before submitting************************************************************************************
 	#html = urlopen("http://www.michigandaily.com/section/opinion").read()
 	#html = urlopen("opinion.html").read()
 	html = open("opinion.html", "r")
@@ -87,15 +85,41 @@ def grab_headlines():
 ## requests.get(base_url, headers={'User-Agent': 'SI_CLASS'})
 
 def get_umsi_data():
-    pass
-    #Your code here
+    '''
+    create dict umsi_titles
+    for loop starting with first url, increments and changes the number at the end of the url to lead to the next page
+		create beautiful soup object with each page
+		add 
+		
+    '''
+
+    umsi_titles = dict()
+    url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All"
+    page = 0
+    while page < 13:
+    	r = requests.get(url, headers={'User-Agent': 'SI_CLASS'})
+    	soup = BeautifulSoup(r.text, "html.parser")
+    	#content = soup.find('div', attrs="view-content")
+    	names = soup.find_all('div', attrs = "field field-name-title field-type-ds field-label-hidden")
+    	titles = soup.find_all('div', attrs = 'field field-name-field-person-titles field-type-text field-label-hidden')
+    	i = 0
+    	for name in names:
+    		umsi_titles[name.text] = titles[i].text
+    		i += 1
+    	#increment page and update url
+    	page = page + 1
+    	url = "https://www.si.umich.edu/directory?field_person_firstname_value=&field_person_lastname_value=&rid=All&page=" + str(page)
+    return umsi_titles
 
 ## PART 3 (b) Define a function called num_students.
 ## INPUT: The dictionary from get_umsi_data().
 ## OUTPUT: Return number of PhD students in the data.  (Don't forget, I may change the input data)
 def num_students(data):
-    pass
-    #Your code here
+	count = 0
+	for person in data:
+		if data[person] == 'PhD student':
+			count += 1
+	return count
 
 
 
